@@ -16,18 +16,26 @@ connectDB();
 app.use(cors());
 app.use(express.json());
 
+// Статика: обложки и музыка из папки frontend/public
 app.use('/covers', express.static(path.join(__dirname, '../frontend/public/covers')));
 app.use('/music', express.static(path.join(__dirname, '../frontend/public/music')));
 
+// API маршруты
 app.use('/api/users', userRoutes);
 app.use('/api/albums', albumRoutes);
 app.use('/api/artists', artistRoutes);
 app.use('/api/config', configRoutes);
 
-app.use((req, res) => {
-  res.status(404).json({ message: 'Маршрут не найден' });
+// Раздача собранного React-фронта (после npm run build)
+const frontendDist = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendDist));
+
+// Все остальные запросы → index.html (для React Router)
+app.get('*', (req, res) => {
+  res.sendFile(path.join(frontendDist, 'index.html'));
 });
 
+// Обработка ошибок
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({ message: 'Внутренняя ошибка сервера' });
